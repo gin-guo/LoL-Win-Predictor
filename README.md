@@ -29,3 +29,5 @@ Where
 
 Example:
 `node data-parser.js na1 II GOLD 1`
+
+Output:
