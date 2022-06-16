@@ -15,4 +15,17 @@ The purpose of this project is to enhance the gaming experience and skill improv
 ## Riot API
 The data used in this program is extracted from the Riot Development API, of which the documentation can be found here: https://developer.riotgames.com/docs/lol. The data sample used focuses on Summoners (League players) in the NA1 region, playing ranked games.
 
+## data-parser.js
 
+### Usage
+
+`node data-parser.js [region] [tier] [division] [page]`
+
+Where
+* `region` is one of 'br1', 'eun1', 'euw1', 'jp1', 'kr1', 'la1', 'la2', 'na1', 'oc1', 'ru' or 'tr1'.
+* `tier` is one of 'IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM' or 'DIAMOND'.
+* `division` is one of 'I', 'II', 'III' or 'IV'.
+* `page` is an integer that starts and 1 and keeps increments till there is no more data for the selected configuration.
+
+Example:
+`node data-parser.js na1 II GOLD 1`
