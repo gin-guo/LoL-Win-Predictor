@@ -1,9 +1,6 @@
 // =======================================================================
 // Hyperparameters
 
-// Api key, experies after each day
-// const API_KEY = "RGAPI-57bfd67f-f777-45fd-9089-345a2e4a249a";
-
 // Amount of matche to retrieve from each of the players, up to 100
 const MATCHES_PER_PLAYER = 5;
 
