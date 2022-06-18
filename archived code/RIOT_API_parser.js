@@ -12,10 +12,25 @@ const axios = require("axios");
 //const ObjectsToCsv = require("objects-to-csv");
 
 async function getData() {
-  const url = `https://na1.api.riotgames.com${path}${queueParam[0]}/${tierParam[0]}/${divParam[0]}?page=1&api_key=${devKey}`;
+  // // get summonerId
+  // const url = `https://na1.api.riotgames.com${path}${queueParam[0]}/${tierParam[0]}/${divParam[0]}?page=1&api_key=${devKey}`;
 
+  // // get puuid
   // main_player_summoner_id = "LBkuGf-Iuw4F1tIArvQTM6hohU4ulANqiYW8068Xw3KpHv9c";
-  // const url = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/${main_player_summoner_id}&api_key=${devKey}`;
+  // const url = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/${main_player_summoner_id}?api_key=${devKey}`;
+
+  // get match ids
+  // const main_player_puuid = "T5i80nFtX4bPzq8hoK_3wmzKw8n9KQk0rS85HQ8dNV_9VEJMnotydh7nr_hg50lgdhxSAI20kLub2g"
+  // const MATCHES_PER_PLAYER = "20"
+  // const url = `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${main_player_puuid}/ids?start=0&count=${MATCHES_PER_PLAYER}&api_key=${devKey}`;
+
+  // // get match data
+  // const match_id = "NA1_4345803439";
+  // const url = `https://americas.api.riotgames.com/lol/match/v5/matches/${match_id}?api_key=${devKey}`;
+
+  // get match players summonerId
+  participant_summoner_id = "LBkuGf-Iuw4F1tIArvQTM6hohU4ulANqiYW8068Xw3KpHv9c";
+  const url = `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${participant_summoner_id}?api_key=${devKey}`;
 
   const response = await axios.get(url);
   // turn return value to json
