@@ -28,6 +28,6 @@ Where
 * `page` is an integer that starts and 1 and keeps increments till there is no more data for the selected configuration.
 
 Example:
-`node data-parser.js na1 II GOLD 1`
+`node data-parser.js na1 GOLD II 1 RGAPI-57bfd67f-f777-45fd-9089-345a2e4a249a`
 
 Output:
