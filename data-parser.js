@@ -1,13 +1,16 @@
 // =======================================================================
 // Hyperparameters
 
-// Amount of matche to retrieve from each of the players, up to 100
+// Number of matches to retrieve from each of the players, up to 100
 const MATCHES_PER_PLAYER = 5;
 
 // =======================================================================
 
 // Import library to make API requests
 const axios = require("axios");
+
+// Import library to write array of json object to csv
+const ObjectsToCsv = require("objects-to-csv");
 
 // Add api key to all requests
 // axios.defaults.headers.common["X-Riot-Token"] = API_KEY;
@@ -49,7 +52,7 @@ function sleep(ms) {
   const players = res.data;
 
   for (const player of players) {
-    // Structure tohold each record of the input data structure
+    // Structure to hold each record of the input data structure
     let data = {};
 
     // Store the main player summoner id to later identify it
@@ -128,7 +131,13 @@ function sleep(ms) {
 
           // Get result of match for output data structure
           Y.push(participant.win);
-          // console.log(Y)
+
+          // // Make filename with match id and participant win -> ./matchId-WIN.csv
+          // let results = "WIN"
+          // if (participant.win == false){
+          //   results = "LOST"
+          // }
+          // let filename = './' + match_id + '-' + results + '.csv'
         }
 
         // Add player data to array
@@ -142,7 +151,7 @@ function sleep(ms) {
       let rival_count = 0;
 
       for (const participant_data of participants_data) {
-        // If  the player is the main player
+        // If the player is the main player
         if (participant_data.summoner_id == main_player_summoner_id) {
           data.main_player_win = participant_data.wins;
           data.main_player_miniseries_wins = participant_data.miniseries_wins;
@@ -198,6 +207,10 @@ function sleep(ms) {
       // Add formatted data into input data structure
       console.log(data);
       X.push(data);
+
+      // // Write data to cvs file
+      // cvs = new ObjectsToCsv(data);
+      // await csv.toDisk(filename);
 
       // Halt program to avoid rate limit
       // Limits:

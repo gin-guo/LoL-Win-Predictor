@@ -5,15 +5,15 @@ const path = "/lol/league/v4/entries/"; // challenger leagues by queue, tier, an
 const queueParam = ["RANKED_SOLO_5x5", "RANKED_FLEX_SR", "RANKED_FLEX_TT"];
 const tierParam = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 const divParam = ["I", "II", "III", "IV"];
-const devKey = "RGAPI-57bfd67f-f777-45fd-9089-345a2e4a249a"; // the API key changes frequently (every 2 days?)
+const devKey = "RGAPI-a9b89946-b3d1-46c5-bcf5-f2fd1056c058"; // the API key changes frequently (every 2 days?)
 
 // Import library to make API requests
 const axios = require("axios");
-//const ObjectsToCsv = require("objects-to-csv");
+const ObjectsToCsv = require("objects-to-csv");
 
 async function getData() {
-  // // get summonerId
-  // const url = `https://na1.api.riotgames.com${path}${queueParam[0]}/${tierParam[0]}/${divParam[0]}?page=1&api_key=${devKey}`;
+  // get summonerId
+  const url = `https://na1.api.riotgames.com${path}${queueParam[0]}/${tierParam[0]}/${divParam[0]}?page=1&api_key=${devKey}`;
 
   // // get puuid
   // main_player_summoner_id = "LBkuGf-Iuw4F1tIArvQTM6hohU4ulANqiYW8068Xw3KpHv9c";
@@ -28,15 +28,20 @@ async function getData() {
   // const match_id = "NA1_4345803439";
   // const url = `https://americas.api.riotgames.com/lol/match/v5/matches/${match_id}?api_key=${devKey}`;
 
-  // get match players summonerId
-  participant_summoner_id = "LBkuGf-Iuw4F1tIArvQTM6hohU4ulANqiYW8068Xw3KpHv9c";
-  const url = `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${participant_summoner_id}?api_key=${devKey}`;
+  // // get match players summonerId
+  // participant_summoner_id = "LBkuGf-Iuw4F1tIArvQTM6hohU4ulANqiYW8068Xw3KpHv9c";
+  // const url = `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${participant_summoner_id}?api_key=${devKey}`;
 
   const response = await axios.get(url);
   // turn return value to json
   const data = response.data;
 
-  console.log(data);
+  // console.log(data);
+
+  // Write data to cvs file
+  const csv = new ObjectsToCsv(data);
+  await csv.toDisk("./test.csv");
 }
 
+// run function
 getData();
