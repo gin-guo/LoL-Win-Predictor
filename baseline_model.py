@@ -2,7 +2,7 @@ import csv
 
 results = []
 
-with open('test_player_data.csv', newline='') as csvfile:
+with open('input.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter = ' ', quotechar='|')
 
     for row in spamreader:
