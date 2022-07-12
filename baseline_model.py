@@ -2,14 +2,24 @@ import csv
 
 results = []
 
-with open('input.csv', newline='') as csvfile:
-    spamreader = csv.reader(csvfile, delimiter = ' ', quotechar='|')
+# collect true outputs
+with open('output.csv', newline='') as csvfile:
+    spamreader = csv.reader(csvfile)
 
     for row in spamreader:
-        row = row[0]
-        row = row.split(",")
+        if len(row) == 0: results.append(['0'])
+        elif row[0] == 'result': continue
+        else: results.append(row)
 
-        if row[1] == "main_player_miniseries_wins":
+correct = 0
+total = 0
+
+with open('input.csv', newline='') as csvfile:
+    spamreader = csv.reader(csvfile)
+
+    i = 0
+    for row in spamreader:
+        if row[0] == "main_player_win":
             print("skipped first row")
             continue
 
@@ -32,8 +42,19 @@ with open('input.csv', newline='') as csvfile:
         allyrate = (a1rate + a2rate + a3rate + a4rate + a5rate) / 5
         rivalrate = (r1rate + r2rate + r3rate + r4rate + r5rate) / 5
 
-        if(allyrate > rivalrate): results.append(1)
-        else: results.append(0)
+        if(allyrate > rivalrate): results[i].append('1')
+        else: results[i].append('0')
 
-print(results)
+        if results[i][0] == results[i][1]: correct += 1
+        total += 1
+
+        i += 1
+
+print("CORRECT:", correct, "out of", total)
+
+with open('test_output.csv', 'w', newline='') as csvfile:
+    spamwriter = csv.writer(csvfile)
+
+    for row in results:
+        spamwriter.writerow(row)
 
