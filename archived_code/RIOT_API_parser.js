@@ -5,7 +5,7 @@ const path = "/lol/league/v4/entries/"; // challenger leagues by queue, tier, an
 const queueParam = ["RANKED_SOLO_5x5", "RANKED_FLEX_SR", "RANKED_FLEX_TT"];
 const tierParam = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 const divParam = ["I", "II", "III", "IV"];
-const devKey = "RGAPI-a9b89946-b3d1-46c5-bcf5-f2fd1056c058"; // the API key changes frequently (every 2 days?)
+const devKey = "RGAPI-416ba7bf-1b45-4ab2-b200-b5ee6109b372"; // the API key changes frequently (every 2 days?)
 
 // Import library to make API requests
 const axios = require("axios");
@@ -36,11 +36,11 @@ async function getData() {
   // turn return value to json
   const data = response.data;
 
-  // console.log(data);
+  console.log(data);
 
   // Write data to cvs file
-  const csv = new ObjectsToCsv(data);
-  await csv.toDisk("./test.csv");
+  // const csv = new ObjectsToCsv(data);
+  // await csv.toDisk("./test.csv");
 }
 
 // run function

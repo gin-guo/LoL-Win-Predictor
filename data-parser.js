@@ -130,14 +130,14 @@ function sleep(ms) {
           main_player_team = participant_data.team_id;
 
           // Get result of match for output data structure
-          Y.push(participant.win);
 
-          // // Make filename with match id and participant win -> ./matchId-WIN.csv
-          // let results = "WIN"
-          // if (participant.win == false){
-          //   results = "LOST"
-          // }
-          // let filename = './' + match_id + '-' + results + '.csv'
+          let result = [];
+          result.result = participant.win;
+          Y.push(result);
+          // console.log(result);
+
+          let csv2 = new ObjectsToCsv([result]);
+          await csv2.toDisk("./output.csv", { append: true });
         }
 
         // Add player data to array
@@ -205,12 +205,11 @@ function sleep(ms) {
         }
       }
       // Add formatted data into input data structure
-      console.log(data);
+      // console.log([data]);
       X.push(data);
 
-      // // Write data to cvs file
-      // cvs = new ObjectsToCsv(data);
-      // await csv.toDisk(filename);
+      let csv1 = new ObjectsToCsv([data]);
+      await csv1.toDisk("./input.csv", { append: true });
 
       // Halt program to avoid rate limit
       // Limits:
@@ -225,7 +224,4 @@ function sleep(ms) {
       }
     }
   }
-
-  // TODO
-  // Turn input and output data structures (arrays of jsons) into csv files
 })();
