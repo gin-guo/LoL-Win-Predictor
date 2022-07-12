@@ -23,7 +23,6 @@ class Pigeon(nn.Module):
         flattened = img.view(-1, 28 * 28)
         activation1 = self.layer1(flattened)
         activation1 = F.relu(activation1)
-        # activation1 = F.silu(activation1)
         activation2 = self.layer2(activation1)
         return activation2
 

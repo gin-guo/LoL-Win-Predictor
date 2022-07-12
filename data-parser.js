@@ -132,7 +132,12 @@ function sleep(ms) {
           // Get result of match for output data structure
 
           let result = [];
-          result.result = participant.win;
+          if (participant.win == true) {
+            result.result = 0;
+          } else {
+            result.result = 1;
+          }
+
           Y.push(result);
           // console.log(result);
 
@@ -215,9 +220,11 @@ function sleep(ms) {
       // Limits:
       //  20 requests in 1 second
       //  OR 100 requests in 2 min
-      if (count < 4) {
+
+      // 1600 requests per minute
+      if (count < 5) {
         count++;
-        await sleep(1000);
+        await sleep(1000); // time in ms
       } else {
         count = 0;
         await sleep(120 * 1000);
