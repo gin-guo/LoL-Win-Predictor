@@ -61,6 +61,7 @@ async function fileLineCount({ fileLocation }) {
     `${base_url}/lol/league/v4/entries/RANKED_SOLO_5x5/${tier}/${division}?page=${page}&api_key=${API_key}`
   );
   const players = res.data;
+  players.sort(() => Math.random() - 0.5);
 
   for (const player of players) {
     // Structure to hold each record of the input data structure
@@ -253,7 +254,7 @@ async function fileLineCount({ fileLocation }) {
       let csv1 = new ObjectsToCsv([data]);
       await csv1.toDisk(`./${tier}_${division}_input.csv`, { append: true });
 
-      console.log(`[${total_matches}] added match :)`);
+      console.log(`[${total_matches+1}] added match :)`);
       total_matches++;
       if(total_matches >= 200) {
         console.log("Done with this rank :D")
