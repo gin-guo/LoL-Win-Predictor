@@ -20,6 +20,9 @@ with open('input.csv', newline='') as csvfile:
     i = 0
     for row in spamreader:
         if row[0] == "main_player_win":
+
+            # get indices of win & loss counts for each player
+
             print("skipped first row")
             continue
 
