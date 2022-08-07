@@ -90,6 +90,9 @@ function sleep(ms) {
         // Variable to hold the relevant information of each player
         participant_data = {};
 
+        // Variable to check that the player has ranked data
+        let ranked_exists = false;
+
         // Variables that are later use to identify if the player is the main player, an ally or a rival
         participant_data.summoner_id = participant.summonerId;
         participant_data.team_id = participant.teamId;
@@ -109,8 +112,13 @@ function sleep(ms) {
         for (const league_entry of league_entries) {
           if (league_entry.queueType == "RANKED_SOLO_5x5") {
             participant_summoner_data = league_entry;
+            ranked_exists = true;
             break;
           }
+        }
+
+        if (!ranked_exists){
+          continue;
         }
 
         // Add additional data for each player
