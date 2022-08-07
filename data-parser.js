@@ -201,8 +201,7 @@ async function fileLineCount({ fileLocation }) {
           data.main_player_losses = participant_data.losses;
           data.main_player_miniseries_losses =
             participant_data.miniseries_losses;
-          data.main_player_tier = participant_data.tier;
-          data.main_player_rank = participant_data.rank;
+          data.main_player_tier = participant_data.tier + "_" + participant_data.rank;
           data.main_player_league_points = participant_data.league_points;
           data.main_player_champion_level = participant_data.champion_level;
           data.main_player_champion_experience =
