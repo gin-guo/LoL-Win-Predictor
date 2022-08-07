@@ -53,6 +53,7 @@ async function fileLineCount({ fileLocation }) {
 (async () => {
   // Variable used to limit rate
   count = 0;
+  count2 = 0;
 
   total_matches = await fileLineCount({ fileLocation: `./${tier}_${division}_input.csv` }) ?? 0;
 
@@ -96,13 +97,18 @@ async function fileLineCount({ fileLocation }) {
         //  20 requests in 1 second
         //  OR 100 requests in 2 min
 
-        // 1600 requests per minute
-        if (count < 15) {
-          count++;
-          await sleep(1000); // time in ms
+
+        if (count2 < 15) {
+          count2++;
         } else {
-          count = 0;
-          await sleep(120 * 1000); // wait for 2 minutes if have 15 continuous unranked matches
+          count2 = 0;
+          await sleep(1000); // time in ms
+          if(count < 5){
+            count++
+          } else {
+            count = 0;
+            await sleep(120 * 1000); // wait for 2 minutes if have 15 continuous unranked matches
+          }
         }
 
         continue;
