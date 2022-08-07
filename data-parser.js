@@ -12,6 +12,10 @@ const axios = require("axios");
 // Import library to write array of json object to csv
 const ObjectsToCsv = require("objects-to-csv");
 
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+
+
 // Add api key to all requests
 // axios.defaults.headers.common["X-Riot-Token"] = API_KEY;
 
@@ -40,16 +44,24 @@ function sleep(ms) {
   });
 }
 
+async function fileLineCount({ fileLocation }) {
+    const { stdout } = await exec(`cat ${fileLocation} | wc -l`);
+    return parseInt(stdout);
+  };
+
 // Main function
 (async () => {
   // Variable used to limit rate
   count = 0;
+
+  total_matches = await fileLineCount({ fileLocation: `./${tier}_${division}_input.csv` }) ?? 0;
 
   // Get all players in the selected region, tier, division and page
   let res = await axios.get(
     `${base_url}/lol/league/v4/entries/RANKED_SOLO_5x5/${tier}/${division}?page=${page}&api_key=${API_key}`
   );
   const players = res.data;
+  players.sort(() => Math.random() - 0.5);
 
   for (const player of players) {
     // Structure to hold each record of the input data structure
@@ -166,10 +178,9 @@ function sleep(ms) {
 
           Y.push(result);
           // console.log(result);
-          console.log("added match :)");
 
           let csv2 = new ObjectsToCsv([result]);
-          await csv2.toDisk("./output.csv", { append: true });
+          await csv2.toDisk(`./${tier}_${division}_output.csv`, { append: true });
         }
 
         // Add player data to array
@@ -241,7 +252,14 @@ function sleep(ms) {
       X.push(data);
 
       let csv1 = new ObjectsToCsv([data]);
-      await csv1.toDisk("./input.csv", { append: true });
+      await csv1.toDisk(`./${tier}_${division}_input.csv`, { append: true });
+
+      console.log(`[${total_matches+1}] added match :)`);
+      total_matches++;
+      if(total_matches >= 200) {
+        console.log("Done with this rank :D")
+        process.exit();
+      }
 
       // Halt program to avoid rate limit
       // Limits:
