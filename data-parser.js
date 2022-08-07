@@ -177,8 +177,8 @@ function sleep(ms) {
           data[`ally_${ally_count}_losses`] = participant_data.losses;
           data[`ally_${ally_count}_miniseries_losses`] =
             participant_data.miniseries_losses;
-          data[`ally_${ally_count}_tier`] = participant_data.tier;
-          data[`ally_${ally_count}_rank`] = participant_data.rank;
+          data[`ally_${ally_count}_tier`] =
+            participant_data.tier + "_" + participant_data.rank;
           data[`ally_${ally_count}_league_points`] =
             participant_data.league_points;
           data[`ally_${ally_count}_champion_level`] =
@@ -196,8 +196,8 @@ function sleep(ms) {
           data[`rival_${rival_count}_losses`] = participant_data.losses;
           data[`rival_${rival_count}_miniseries_losses`] =
             participant_data.miniseries_losses;
-          data[`rival_${rival_count}_tier`] = participant_data.tier;
-          data[`rival_${rival_count}_rank`] = participant_data.rank;
+          data[`rival_${rival_count}_tier`] =
+            participant_data.tier + "_" + participant_data.rank;
           data[`rival_${rival_count}_league_points`] =
             participant_data.league_points;
           data[`rival_${rival_count}_champion_level`] =
