@@ -78,6 +78,24 @@ function sleep(ms) {
       );
       match_data = res.data;
 
+      if (!(match_data.info.queueId == 420 || match_data.info.queueId == 440)) {
+        // Halt program to avoid rate limit
+        // Limits:
+        //  20 requests in 1 second
+        //  OR 100 requests in 2 min
+
+        // 1600 requests per minute
+        if (count < 15) {
+          count++;
+          await sleep(1000); // time in ms
+        } else {
+          count = 0;
+          await sleep(120 * 1000); // wait for 2 minutes if have 15 continuous unranked matches
+        }
+
+        continue;
+      }
+
       // Variable to hold the main player team id to later identify allies and rivals
       let main_player_team;
 
@@ -91,7 +109,7 @@ function sleep(ms) {
         participant_data = {};
 
         // Variable to check that the player has ranked data
-        let ranked_exists = false;
+        // let ranked_exists = false;
 
         // Variables that are later use to identify if the player is the main player, an ally or a rival
         participant_data.summoner_id = participant.summonerId;
@@ -117,9 +135,9 @@ function sleep(ms) {
           }
         }
 
-        if (!ranked_exists){
-          continue;
-        }
+        // if (!ranked_exists) {
+        //   continue;
+        // }
 
         // Add additional data for each player
         participant_data.wins = participant_summoner_data.wins;
@@ -148,6 +166,7 @@ function sleep(ms) {
 
           Y.push(result);
           // console.log(result);
+          console.log("added match :)");
 
           let csv2 = new ObjectsToCsv([result]);
           await csv2.toDisk("./output.csv", { append: true });
