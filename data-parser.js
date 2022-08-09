@@ -60,7 +60,6 @@ let num_requests = 0;
 
 setInterval(() => {
   if(!paused) {
-    console.log("Tick", count)
     // Increase seconds count for limit
     // 100 requests per 2 min (120 s)
     count++;
@@ -76,8 +75,8 @@ setInterval(() => {
 (async () => {
 
   // Review the file contents before starting 
-  total_inputs  = await fileLineCount({ fileLocation: `./${tier}_${division}_input.csv` }) ?? 0;
-  total_outputs = await fileLineCount({ fileLocation: `./${tier}_${division}_output.csv` }) ?? 0;
+  total_inputs  = await fileLineCount({ fileLocation: `./match-data/${tier}_${division}_input.csv` }) ?? 0;
+  total_outputs = await fileLineCount({ fileLocation: `./match-data/${tier}_${division}_output.csv` }) ?? 0;
 
   if(total_inputs != total_outputs) {
     console.error("Input and output files have different number of records. Please manually review the files before running the program.")
@@ -283,10 +282,10 @@ setInterval(() => {
         if(X.length == Y.length) {
           try {
             let csv1 = new ObjectsToCsv([X.at(-1)]);
-            await csv1.toDisk(`./${tier}_${division}_input.csv`, { append: true });
+            await csv1.toDisk(`./match-data/${tier}_${division}_input.csv`, { append: true });
     
             let csv2 = new ObjectsToCsv([Y.at(-1)]);
-            await csv2.toDisk(`./${tier}_${division}_output.csv`, { append: true });
+            await csv2.toDisk(`./match-data/${tier}_${division}_output.csv`, { append: true });
           } catch (err) {
             console.error("Error on file writting", err)
             process.exit();
