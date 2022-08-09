@@ -2,7 +2,8 @@
 // Hyperparameters
 
 // Number of matches to retrieve from each of the players, up to 100
-const MATCHES_PER_PLAYER = 5;
+const MATCHES_PER_PLAYER = 7;
+const MATCH_LIMIT = 200;
 
 // =======================================================================
 
@@ -12,22 +13,21 @@ const axios = require("axios");
 // Import library to write array of json object to csv
 const ObjectsToCsv = require("objects-to-csv");
 
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-
-
-// Add api key to all requests
-// axios.defaults.headers.common["X-Riot-Token"] = API_KEY;
+// Library for file read
+const fs = require('fs');
+const { toASCII } = require("punycode");
 
 // Get arguments from command line
-region = process.argv[2];
-tier = process.argv[3];
-division = process.argv[4];
-page = process.argv[5];
-API_key = process.argv[6];
+tier = process.argv[2];
+division = process.argv[3];
+page = process.argv[4];
+API_key = process.argv[5];
+
+// Add api key to all requests
+axios.defaults.headers.common["X-Riot-Token"] = API_key;
 
 // Format base url
-const base_url = `https://${region}.api.riotgames.com`;
+const base_url = `https://na1.api.riotgames.com`;
 
 // For some reason matches api takes a different format of region
 // I am hard coding americas because I don't know how it really works
@@ -45,26 +45,63 @@ function sleep(ms) {
 }
 
 async function fileLineCount({ fileLocation }) {
-    const { stdout } = await exec(`cat ${fileLocation} | wc -l`);
-    return parseInt(stdout);
-  };
+  try {
+    const data = fs.readFileSync(fileLocation);
+    return data.toString().split('\n').length - 1;
+  } catch {
+    return 0;
+  }
+};
+
+// Variables used to limit rate
+let count  = 0;
+let paused = false;
+let num_requests = 0;
+
+setInterval(() => {
+  if(!paused) {
+    console.log("Tick", count)
+    // Increase seconds count for limit
+    // 100 requests per 2 min (120 s)
+    count++;
+
+    // If near limit halt till completed limit
+    if(num_requests >= 95) {
+      paused = true;
+    }
+  }
+}, 1000);
 
 // Main function
 (async () => {
-  // Variable used to limit rate
-  count = 0;
-  count2 = 0;
 
-  total_matches = await fileLineCount({ fileLocation: `./${tier}_${division}_input.csv` }) ?? 0;
+  // Review the file contents before starting 
+  total_inputs  = await fileLineCount({ fileLocation: `./${tier}_${division}_input.csv` }) ?? 0;
+  total_outputs = await fileLineCount({ fileLocation: `./${tier}_${division}_output.csv` }) ?? 0;
+
+  if(total_inputs != total_outputs) {
+    console.error("Input and output files have different number of records. Please manually review the files before running the program.")
+    process.exit();
+  } else {
+    total_matches = total_inputs;
+  }
 
   // Get all players in the selected region, tier, division and page
   let res = await axios.get(
     `${base_url}/lol/league/v4/entries/RANKED_SOLO_5x5/${tier}/${division}?page=${page}&api_key=${API_key}`
   );
+  num_requests++;
   const players = res.data;
+
+  // Shuffle players
   players.sort(() => Math.random() - 0.5);
 
   for (const player of players) {
+
+    // Check every second for api rate limit.
+    // Api response time is too slow to consider the first limit:
+    // 20 request per second
+
     try {
         // Structure to hold each record of the input data structure
       let data = {};
@@ -76,39 +113,49 @@ async function fileLineCount({ fileLocation }) {
       res = await axios.get(
         `${base_url}/lol/summoner/v4/summoners/${main_player_summoner_id}?api_key=${API_key}`
       );
+      num_requests++;
       summoner_data = res.data;
       main_player_puuid = summoner_data.puuid;
 
-      // Request matches of the player
+      // Request solo ranked matches of the player
       res = await axios.get(
-        `${base_url2}/lol/match/v5/matches/by-puuid/${main_player_puuid}/ids?start=0&count=${MATCHES_PER_PLAYER}&api_key=${API_key}`
+        `${base_url2}/lol/match/v5/matches/by-puuid/${main_player_puuid}/ids?start=0&count=${MATCHES_PER_PLAYER}&queu=420&type=ranked&api_key=${API_key}`
       );
+      num_requests++;
       matches_ids = res.data;
 
+      // Request flex ranked matches of player if there are not enought solo ranked
+      if(matches_ids.length < MATCHES_PER_PLAYER) {
+        res = await axios.get(
+          `${base_url2}/lol/match/v5/matches/by-puuid/${main_player_puuid}/ids?start=0&count=${MATCHES_PER_PLAYER - matches_ids.length}&queu=440&type=ranked&api_key=${API_key}`
+        );
+        num_requests++;
+        matches_ids.concat(res.data);
+      }
+
       for (const match_id of matches_ids) {
+
+        // Halt program 
+        if(paused) {
+          // Add 5 seconds of extra sleep just in case
+          time_left = 120 - count;
+          console.log(`Waiting ${time_left} seconds for api limit rate`);
+          await sleep(time_left * 1000);
+          console.log("Resuming")
+
+          // Reset num of request once two minute have pass
+          count = 0;
+          num_requests = 0;
+          paused = false;
+        }
+          
+
         // Get match data
         res = await axios.get(
           `${base_url2}/lol/match/v5/matches/${match_id}?api_key=${API_key}`
         );
+        num_requests++;
         match_data = res.data;
-
-        if (!(match_data.info.queueId == 420 || match_data.info.queueId == 440)) {
-          // Halt program to avoid rate limit
-          // Limits:
-          //  20 requests in 1 second
-          //  OR 100 requests in 2 min
-
-
-          if (count < 15) {
-            count++;
-            await sleep(1000); // time in ms
-          } else {
-            count = 0;
-            await sleep(120 * 1000);
-          }
-
-          continue;
-        }
 
         // Variable to hold the main player team id to later identify allies and rivals
         let main_player_team;
@@ -122,9 +169,6 @@ async function fileLineCount({ fileLocation }) {
           // Variable to hold the relevant information of each player
           participant_data = {};
 
-          // Variable to check that the player has ranked data
-          // let ranked_exists = false;
-
           // Variables that are later use to identify if the player is the main player, an ally or a rival
           participant_data.summoner_id = participant.summonerId;
           participant_data.team_id = participant.teamId;
@@ -137,6 +181,7 @@ async function fileLineCount({ fileLocation }) {
           res = await axios.get(
             `${base_url}/lol/league/v4/entries/by-summoner/${participant.summonerId}?api_key=${API_key}`
           );
+          num_requests++;
           league_entries = res.data;
 
           // The above API gets info for all leagues (TFT, flex, ranked)
@@ -144,22 +189,18 @@ async function fileLineCount({ fileLocation }) {
           for (const league_entry of league_entries) {
             if (league_entry.queueType == "RANKED_SOLO_5x5") {
               participant_summoner_data = league_entry;
-              ranked_exists = true;
               break;
             }
           }
 
-          // if (!ranked_exists) {
-          //   continue;
-          // }
+          if(participant_summoner_data == null) {
+            console.error("Player has no ranked profile. Discarting match.")
+            continue
+          }
 
           // Add additional data for each player
           participant_data.wins = participant_summoner_data.wins;
-          participant_data.miniseries_wins =
-            participant_summoner_data.miniseries?.wins ?? 0;
           participant_data.losses = participant_summoner_data.losses;
-          participant_data.miniseries_losses =
-            participant_summoner_data.miniseries?.losses ?? 0;
           participant_data.tier = participant_summoner_data.tier;
           participant_data.rank = participant_summoner_data.rank;
           participant_data.league_points = participant_summoner_data.leaguePoints;
@@ -181,8 +222,6 @@ async function fileLineCount({ fileLocation }) {
             Y.push(result);
             // console.log(result);
 
-            let csv2 = new ObjectsToCsv([result]);
-            await csv2.toDisk(`./${tier}_${division}_output.csv`, { append: true });
           }
 
           // Add player data to array
@@ -199,10 +238,7 @@ async function fileLineCount({ fileLocation }) {
           // If the player is the main player
           if (participant_data.summoner_id == main_player_summoner_id) {
             data.main_player_win = participant_data.wins;
-            data.main_player_miniseries_wins = participant_data.miniseries_wins;
             data.main_player_losses = participant_data.losses;
-            data.main_player_miniseries_losses =
-              participant_data.miniseries_losses;
             data.main_player_tier = participant_data.tier + "_" + participant_data.rank;
             data.main_player_league_points = participant_data.league_points;
             data.main_player_champion_level = participant_data.champion_level;
@@ -211,11 +247,7 @@ async function fileLineCount({ fileLocation }) {
           } else if (participant_data.team_id == main_player_team) {
             // if the player is an ally
             data[`ally_${ally_count}_wins`] = participant_data.wins;
-            data[`ally_${ally_count}_miniseries_wins`] =
-              participant_data.miniseries_wins;
             data[`ally_${ally_count}_losses`] = participant_data.losses;
-            data[`ally_${ally_count}_miniseries_losses`] =
-              participant_data.miniseries_losses;
             data[`ally_${ally_count}_tier`] =
               participant_data.tier + "_" + participant_data.rank;
             data[`ally_${ally_count}_league_points`] =
@@ -230,11 +262,7 @@ async function fileLineCount({ fileLocation }) {
           } else {
             // If the player is a rival
             data[`rival_${rival_count}_wins`] = participant_data.wins;
-            data[`rival_${rival_count}_miniseries_wins`] =
-              participant_data.miniseries_wins;
             data[`rival_${rival_count}_losses`] = participant_data.losses;
-            data[`rival_${rival_count}_miniseries_losses`] =
-              participant_data.miniseries_losses;
             data[`rival_${rival_count}_tier`] =
               participant_data.tier + "_" + participant_data.rank;
             data[`rival_${rival_count}_league_points`] =
@@ -252,34 +280,38 @@ async function fileLineCount({ fileLocation }) {
         // console.log([data]);
         X.push(data);
 
-        let csv1 = new ObjectsToCsv([data]);
-        await csv1.toDisk(`./${tier}_${division}_input.csv`, { append: true });
-
-        console.log(`[${total_matches+1}] added match :)`);
-        total_matches++;
-        if(total_matches >= 200) {
-          console.log("Done with this rank :D")
-          process.exit();
-        }
-
-        // Halt program to avoid rate limit
-        // Limits:
-        //  20 requests in 1 second
-        //  OR 100 requests in 2 min
-
-        // 1600 requests per minute
-        if (count < 5) {
-          count++;
-          await sleep(1000); // time in ms
+        if(X.length == Y.length) {
+          try {
+            let csv1 = new ObjectsToCsv([X.at(-1)]);
+            await csv1.toDisk(`./${tier}_${division}_input.csv`, { append: true });
+    
+            let csv2 = new ObjectsToCsv([Y.at(-1)]);
+            await csv2.toDisk(`./${tier}_${division}_output.csv`, { append: true });
+          } catch (err) {
+            console.error("Error on file writting", err)
+            process.exit();
+          }
+  
+          console.log(`[${total_matches+1}] added match :)`);
+          total_matches++;
+          if(total_matches >= MATCH_LIMIT) {
+            console.log("Done with this rank :D")
+            process.exit();
+          }
         } else {
-          count = 0;
-          await sleep(120 * 1000);
+          console.error("Missmatch")
+          if(X.length > Y.length) {
+            X.pop();
+          } else {
+            Y.pop();
+          }
         }
       }
-    } catch {
-      console.error("Error!");
+    } catch(err) {
+      console.error("General error!");
       await sleep(120 * 1000);
       continue;
     }
   }
+  console.log(`No more players in this page ${page}`);
 })();
