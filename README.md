@@ -19,13 +19,13 @@ The data used in this program is extracted from the Riot Development API, of whi
 
 ### Usage
 
-`node data-parser.js [region] [tier] [division] [page]`
+`node data-parser.js tier] [division] [page] [api_key]`
 
 Where
-* `region` is one of 'br1', 'eun1', 'euw1', 'jp1', 'kr1', 'la1', 'la2', 'na1', 'oc1', 'ru' or 'tr1'.
 * `tier` is one of 'IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM' or 'DIAMOND'.
 * `division` is one of 'I', 'II', 'III' or 'IV'.
 * `page` is an integer that starts and 1 and keeps increments till there is no more data for the selected configuration.
+* `api_ley` is a valid provided API key from the RIOT API
 
 Example:
-`node data-parser.js na1 GOLD II 1 RGAPI-fa2e858d-5e1c-4d37-b97d-d46114ba3ff6`
+`node data-parser.js GOLD II 1 RGAPI-fa2e858d-5e1c-4d37-b97d-d46114ba3ff6`
