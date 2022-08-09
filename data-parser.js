@@ -3,7 +3,7 @@
 
 // Number of matches to retrieve from each of the players, up to 100
 const MATCHES_PER_PLAYER = 7;
-const MATCH_LIMIT = 200;
+const MATCH_LIMIT = 500;
 
 // =======================================================================
 
@@ -16,6 +16,7 @@ const ObjectsToCsv = require("objects-to-csv");
 // Library for file read
 const fs = require('fs');
 const { toASCII } = require("punycode");
+const { time } = require("console");
 
 // Get arguments from command line
 tier = process.argv[2];
@@ -34,8 +35,7 @@ const base_url = `https://na1.api.riotgames.com`;
 const base_url2 = `https://americas.api.riotgames.com`;
 
 // Input and output data structures
-let X = [];
-let Y = [];
+let dataset = [];
 
 // Helper function for rate limiting
 function sleep(ms) {
@@ -75,15 +75,7 @@ setInterval(() => {
 (async () => {
 
   // Review the file contents before starting 
-  total_inputs  = await fileLineCount({ fileLocation: `./match-data/${tier}_${division}_input.csv` }) ?? 0;
-  total_outputs = await fileLineCount({ fileLocation: `./match-data/${tier}_${division}_output.csv` }) ?? 0;
-
-  if(total_inputs != total_outputs) {
-    console.error("Input and output files have different number of records. Please manually review the files before running the program.")
-    process.exit();
-  } else {
-    total_matches = total_inputs;
-  }
+  total_matches  = await fileLineCount({ fileLocation: `./match-data/${tier}_${division}.csv` });
 
   // Get all players in the selected region, tier, division and page
   let res = await axios.get(
@@ -137,7 +129,8 @@ setInterval(() => {
         // Halt program 
         if(paused) {
           // Add 5 seconds of extra sleep just in case
-          time_left = 120 - count;
+          let time_left = 120 - count;
+          time_left = time_left < 0 ? 0 : time_left
           console.log(`Waiting ${time_left} seconds for api limit rate`);
           await sleep(time_left * 1000);
           console.log("Resuming")
@@ -210,16 +203,14 @@ setInterval(() => {
             main_player_team = participant_data.team_id;
 
             // Get result of match for output data structure
-
-            let result = [];
             if (participant.win == true) {
-              result.result = 0;
+              data.result = 1;
+            } else if (participant.win == false) {
+              data.result = 0;
             } else {
-              result.result = 1;
+              console.error("Discarting match, no outcome");
+              continue;
             }
-
-            Y.push(result);
-            // console.log(result);
 
           }
 
@@ -277,38 +268,31 @@ setInterval(() => {
         }
         // Add formatted data into input data structure
         // console.log([data]);
-        X.push(data);
+        dataset.push(data);
 
-        if(X.length == Y.length) {
-          try {
-            let csv1 = new ObjectsToCsv([X.at(-1)]);
-            await csv1.toDisk(`./match-data/${tier}_${division}_input.csv`, { append: true });
-    
-            let csv2 = new ObjectsToCsv([Y.at(-1)]);
-            await csv2.toDisk(`./match-data/${tier}_${division}_output.csv`, { append: true });
-          } catch (err) {
-            console.error("Error on file writting", err)
-            process.exit();
-          }
+        try {
+          let csv = new ObjectsToCsv([dataset.at(-1)]);
+          await csv.toDisk(`./match-data/${tier}_${division}.csv`, { append: true });
   
-          console.log(`[${total_matches+1}] added match :)`);
-          total_matches++;
-          if(total_matches >= MATCH_LIMIT) {
-            console.log("Done with this rank :D")
-            process.exit();
-          }
-        } else {
-          console.error("Missmatch")
-          if(X.length > Y.length) {
-            X.pop();
-          } else {
-            Y.pop();
-          }
+        } catch (err) {
+          console.error("Error on file writting", err)
+          process.exit();
+        }
+
+        console.log(`[${total_matches+1}] added match :)`);
+        total_matches++;
+        if(total_matches > MATCH_LIMIT) {
+          console.log("Done with this rank :D")
+          process.exit();
         }
       }
     } catch(err) {
-      console.error("General error!");
-      await sleep(120 * 1000);
+      if(err.response?.status == 429) {
+        console.log("Too many requests, halting")
+        await sleep(120 * 1000);
+      } else {
+        console.error("Unknown error", err)
+      }
       continue;
     }
   }
