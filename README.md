@@ -29,5 +29,3 @@ Where
 
 Example:
 `node data-parser.js na1 GOLD II 1 RGAPI-fa2e858d-5e1c-4d37-b97d-d46114ba3ff6`
-
-Output:
