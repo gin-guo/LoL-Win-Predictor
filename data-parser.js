@@ -19,7 +19,7 @@ const { toASCII } = require("punycode");
 const { time } = require("console");
 
 // Get arguments from command line
-tier = process.argv[2];
+tier = process.argv[add2];
 division = process.argv[3];
 page = process.argv[4];
 API_key = process.argv[5];
