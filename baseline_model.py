@@ -1,19 +1,10 @@
 import csv
 
-results = []
-
-# collect true outputs
-with open('PLATINUM_IV_output.csv', newline='') as csvfile:
-    spamreader = csv.reader(csvfile)
-
-    for row in spamreader:
-        results.append([row[0]])
 
 correct = 0
 total = 0
 
-
-with open('PLATINUM_IV_input.csv', newline='') as csvfile:
+with open('match-data\dataset.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile)
 
     rival_win_idx = [0] * 5
@@ -24,9 +15,10 @@ with open('PLATINUM_IV_input.csv', newline='') as csvfile:
     ally_loss_idx = [0] * 5
     ally_rates = [0] * 5
 
+    result_idx = 1
+
     i = 0
     for row in spamreader:
-        if i == 200: print(row)
         if i == 0:
             # get indices of win & loss counts for each player
             for j in range(len(row)):
@@ -54,6 +46,8 @@ with open('PLATINUM_IV_input.csv', newline='') as csvfile:
                         ally_loss_idx[4] = j
 
         else:
+            true_result = row[result_idx]
+
             # get win rate for all allies & rivals
             for j in range(len(ally_win_idx)):
                 # rate = win / (win + loss)
@@ -65,18 +59,18 @@ with open('PLATINUM_IV_input.csv', newline='') as csvfile:
             ally_rate = sum(ally_rates) / 5
             rival_rate = sum(rival_rates) / 5
 
-            if(ally_rate > rival_rate): results[i].append('1')
-            else: results[i].append('0')
+            if(ally_rate > rival_rate): result = '1'
+            else: result = '0'
 
             # check against actual output
-            if results[i][0] == results[i][1]: correct += 1
+            if result == true_result: correct += 1
             total += 1
 
         i += 1
 
-print("CORRECT:", correct, "out of", total)
+percentage = round(correct/total*100, 2)
+print("CORRECT:", correct, "out of", total, "({}%)".format(percentage))
 
-print(results)
 
 # display results
 # with open('test_output.csv', 'w', newline='') as csvfile:
