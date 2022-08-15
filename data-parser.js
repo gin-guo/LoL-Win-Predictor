@@ -3,7 +3,7 @@
 
 // Number of matches to retrieve from each of the players, up to 100
 const MATCHES_PER_PLAYER = 7;
-const MATCH_LIMIT = 2000;
+const MATCH_LIMIT = 2300;
 
 // =======================================================================
 
